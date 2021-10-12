@@ -1,3 +1,5 @@
+import subprocess
+
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor as ex
@@ -25,8 +27,10 @@ async def help_message(msg: types.Message):
 
 @dp.message_handler(commands=['ip'], user_id=list(admins))
 async def ip_message(msg: types.Message):
-    ip = get('https://api.ipify.org').content.decode('utf8')
-    await msg.answer(f'Here is your ip\n{ip}')
+    ip_ext = get('https://api.ipify.org').content.decode('utf8')
+    ip_loc = subprocess.run('ip a | grep \'[i]net \'', shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8').split(
+            '\n')[1].strip().split()[1].split('/')[0]
+    await msg.answer(f'Here is your ip\n{ip_loc}\n{ip_ext}')
 
 
 @dp.message_handler(content_types=['text'])
