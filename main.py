@@ -1,5 +1,7 @@
 import subprocess
+from time import sleep
 
+import aiogram.utils.exceptions
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor as ex
@@ -46,4 +48,5 @@ async def text_message(msg: types.Message):
 
 
 if __name__ == '__main__':
+    sleep(60)
     ex.start_polling(dp)
