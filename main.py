@@ -48,5 +48,7 @@ async def text_message(msg: types.Message):
 
 
 if __name__ == '__main__':
-    sleep(60)
+    ip = subprocess.run('ip a | grep \'[i]net \'', shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
+    while len(ip) < 2:
+        ip = subprocess.run('ip a | grep \'[i]net \'', shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
     ex.start_polling(dp)
