@@ -1,5 +1,4 @@
 import subprocess
-from time import sleep
 
 import aiogram.utils.exceptions
 from aiogram import Bot, types
@@ -31,7 +30,7 @@ async def help_message(msg: types.Message):
 async def ip_message(msg: types.Message):
     ip_ext = get('https://api.ipify.org').content.decode('utf8')
     ip_loc = subprocess.run('ip a | grep \'[i]net \'', shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8').split(
-            '\n')[1].strip().split()[1].split('/')[0]
+        '\n')[1].strip().split()[1].split('/')[0]
     await msg.answer(f'Here is your ip\n{ip_loc}\n{ip_ext}')
 
 
@@ -48,7 +47,9 @@ async def text_message(msg: types.Message):
 
 
 if __name__ == '__main__':
-    ip = subprocess.run('ip a | grep \'[i]net \'', shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
-    while len(ip) < 2:
-        ip = subprocess.run('ip a | grep \'[i]net \'', shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
-    ex.start_polling(dp)
+    while True:
+        try:
+            ex.start_polling(dp)
+        except aiogram.utils.exceptions.NetworkError:
+            pass
+    # ex.start_polling(dp)
