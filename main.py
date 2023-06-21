@@ -60,6 +60,6 @@ async def set_commands(*args, **kwargs):
 
 
 if __name__ == "__main__":
-    # while True:
-    with contextlib.suppress(NetworkError):
-        ex.start_polling(dp, on_startup=set_commands)
+    while True:
+        with contextlib.suppress(NetworkError):
+            ex.start_polling(dp, on_startup=set_commands)
