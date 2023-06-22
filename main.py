@@ -1,13 +1,16 @@
-import contextlib
-import subprocess
+import socket
+import logging
 
 from aiogram import Bot
 from aiogram.dispatcher import Dispatcher
+from aiogram.dispatcher.filters import Text
 from aiogram.types import BotCommand, Message
 from aiogram.utils import executor as ex
-from aiogram.utils.exceptions import NetworkError
 from environs import Env
-from requests import get
+import aiohttp
+
+
+logging.basicConfig(level=logging.INFO)
 
 env = Env()
 env.read_env(".env")
@@ -20,46 +23,49 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 
 
+def get_local_ip() -> str:
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
+    return ip
+
+
+async def get_ext_ip() -> str:
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://api.ipify.org") as resp:
+            return await resp.text()
+
+
 @dp.message_handler(commands=["start"])
 async def welcome_message(msg: Message):
     await msg.answer("Oh hi Mark")
 
 
-@dp.message_handler(commands=["help"])
-async def help_message(msg: Message):
-    await msg.answer("Type '/ip' or 'ip' to get your remote machine ip addresses")
-
-
+@dp.message_handler(Text(equals="ip", ignore_case=True), user_id=admins)
 @dp.message_handler(commands=["ip"], user_id=admins)
-async def ip_message(msg: Message):
-    ip_ext = get("https://api.ipify.org").content.decode("utf8")
-    ip_loc = (
-        subprocess.run("ip a | grep '[i]net '", shell=True, stdout=subprocess.PIPE)
-        .stdout.decode("utf-8")
-        .splitlines()[1]
-        .strip()
-        .split()[1]
-        .split("/")[0]
+async def ip_handler(msg: Message):
+    ip_msg = await msg.answer("Please wait\nGetting my ip...")
+
+    ip_loc = get_local_ip()
+    ip_ext = await get_ext_ip()
+
+    await bot.edit_message_text(
+        text=f"`{ip_loc}`\n`{ip_ext}`",
+        message_id=ip_msg.message_id,
+        chat_id=ip_msg.chat.id,
+        parse_mode="Markdown",
     )
-    await msg.answer(f"`{ip_loc}`\n`{ip_ext}`", parse_mode="Markdown")
 
 
-@dp.message_handler(content_types=["text"])
-async def text_message(msg: Message):
-    if "ip" in msg.text.lower():
-        if msg.from_user.id in admins:
-            await ip_message(msg)
-        else:
-            await msg.answer("You are not authorized to perform this operation")
-    else:
-        await msg.answer("I don't understand")
+@dp.message_handler(content_types=["text"], user_id=admins)
+async def text_handler(msg: Message):
+    await msg.answer("I don't understand")
 
 
-async def set_commands(*args, **kwargs):
+async def set_commands(_):
     await dp.bot.set_my_commands([BotCommand("ip", "Get IP")])
 
 
 if __name__ == "__main__":
-    while True:
-        with contextlib.suppress(NetworkError):
-            ex.start_polling(dp, on_startup=set_commands)
+    ex.start_polling(dp, on_startup=set_commands)
