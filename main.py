@@ -33,8 +33,8 @@ def get_local_ip() -> str:
 
 async def get_ext_ip() -> str:
     async with aiohttp.ClientSession() as session:
-        async with session.get("https://api.ipify.org") as resp:
-            return await resp.text()
+        async with session.get("https://ipv4-internet.yandex.net/api/v0/ip") as resp:
+            return await resp.json()
 
 
 @dp.message_handler(commands=["start"])
