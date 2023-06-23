@@ -13,7 +13,7 @@ import aiohttp
 logging.basicConfig(level=logging.INFO)
 
 env = Env()
-env.read_env(".env")
+env.read_env()
 
 BOT_TOKEN: str = env.str("BOT_TOKEN")
 admins_raw = env.list("ADMINS")
